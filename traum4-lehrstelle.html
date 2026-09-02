@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Meine Traum-Lehrstelle</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #f7f3ff, #eaf7ff);
+  color: #222;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 25px 16px 50px;
+}
+
+.start, .quiz, .result {
+  background: white;
+  border-radius: 25px;
+  padding: 25px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+h1 {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 15px;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.startButton {
+  background: #8064d8;
+  color: white;
+}
+
+.answer {
+  background: #f4f2fa;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.answer:hover {
+  background: #e6defc;
+  transform: scale(1.01);
+}
+
+.answer.selected {
+  background: #8064d8;
+  color: white;
+}
+
+.progress {
+  height: 10px;
+  background: #eee;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 15px 0 25px;
+}
+
+.progressBar {
+  height: 100%;
+  width: 0%;
+  background: #8064d8;
+  transition: 0.3s;
+}
+
+.questionNumber {
+  color: #8064d8;
+  font-weight: bold;
+}
+
+.nextButton {
+  background: #222;
+  color: white;
+  display: none;
+}
+
+.result {
+  display: none;
+}
+
+.resultCard {
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  border: 2px solid #eee;
+}
+
+.resultTitle {
+  text-align: center;
+  color: #8064d8;
+  margin-bottom: 5px;
+}
+
+.resultSubtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.job {
+  margin: 16px 0;
+}
+
+.jobTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.bar {
+  width: 100%;
+  height: 12px;
+  background: #eee;
+  border-radius: 20px;
+  margin-top: 7px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: #8064d8;
+  border-radius: 20px;
+}
+
+.interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag {
+  background: #eee8ff;
+  color: #6549b8;
+  padding: 7px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.downloadButton {
+  background: #8064d8;
+  color: white;
+}
+
+.restartButton {
+  background: #eee;
+  color: #222;
+}
+
+.small {
+  font-size: 13px;
+  color: #777;
+  text-align: center;
+  margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- START -->
+<div class="start" id="start">
+
+  <h1>Meine Traum-Lehrstelle</h1>
+
+  <p class="subtitle">
+    Beantworte 20 Fragen und finde heraus, welche Lehrstellen zu dir passen.
+  </p>
+
+  <button class="startButton" onclick="startQuiz()">
+    Quiz starten
+  </button>
+
+  <p class="small">
+    Es gibt kein richtig oder falsch.
+  </p>
+
+</div>
+
+
+<!-- QUIZ -->
+<div class="quiz" id="quiz" style="display:none;">
+
+  <div class="questionNumber" id="questionNumber"></div>
+
+  <div class="progress">
+    <div class="progressBar" id="progressBar"></div>
+  </div>
+
+  <h2 id="question"></h2>
+
+  <div id="answers"></div>
+
+  <button class="nextButton" id="nextButton" onclick="nextQuestion()">
+    Weiter
+  </button>
+
+</div>
+
+
+<!-- RESULT -->
+<div class="result" id="result">
+
+  <div class="resultCard" id="resultCard">
+
+    <h1 class="resultTitle">
+      Dein Ergebnis
+    </h1>
+
+    <p class="resultSubtitle">
+      Diese Lehrstellen könnten besonders gut zu dir passen:
+    </p>
+
+    <div id="results"></div>
+
+    <h3>Deine stärksten Interessen</h3>
+
+    <div class="interests" id="interests"></div>
+
+  </div>
+
+  <button class="downloadButton" onclick="saveAsImage()">
+    Ergebnis als Bild speichern
+  </button>
+
+  <button class="restartButton" onclick="restartQuiz()">
+    Quiz nochmals machen
+  </button>
+
+  <p class="small">
+    Das Ergebnis ist nur eine Orientierung und ersetzt keine Berufsberatung.
+  </p>
+
+</div>
+
+</div>
+
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+<script>
+
+const jobs = {
+
+  "Kauffrau EFZ": {
+    tags: ["Büro", "Organisation", "Kommunikation"],
+    text: "Du organisierst gerne, arbeitest am Computer und hast gerne Kontakt mit Menschen."
+  },
+
+  "Bankkauffrau EFZ": {
+    tags: ["Zahlen", "Büro", "Beratung"],
+    text: "Du interessierst dich für Geld, Zahlen und Beratung."
+  },
+
+  "Versicherungsassistentin EFZ": {
+    tags: ["Beratung", "Büro", "Organisation"],
+    text: "Du bist gerne organisiert und erklärst anderen Dinge."
+  },
+
+  "Medizinische Praxisassistentin EFZ": {
+    tags: ["Gesundheit", "Menschen", "Medizin"],
+    text: "Du möchtest Menschen helfen und interessierst dich für Medizin."
+  },
+
+  "Dentalassistentin EFZ": {
+    tags: ["Gesundheit", "Menschen", "Medizin"],
+    text: "Du arbeitest gerne genau und möchtest im Gesundheitsbereich tätig sein."
+  },
+
+  "Fachfrau Gesundheit EFZ": {
+    tags: ["Gesundheit", "Menschen", "Pflege"],
+    text: "Du möchtest Menschen unterstützen und interessierst dich für Gesundheit."
+  },
+
+  "Fachfrau Betreuung EFZ": {
+    tags: ["Menschen", "Kinder", "Soziales"],
+    text: "Du hast Freude daran, andere Menschen zu begleiten und zu unterstützen."
+  },
+
+  "Zeichnerin EFZ": {
+    tags: ["Kreativität", "Technik", "Planen"],
+    text: "Du zeichnest und planst gerne und interessierst dich für Gebäude und Technik."
+  },
+
+  "Mediamatikerin EFZ": {
+    tags: ["Computer", "Kreativität", "Medien"],
+    text: "Du kombinierst Computer, Gestaltung, Medien und Kommunikation."
+  },
+
+  "Informatikerin EFZ": {
+    tags: ["Computer", "Technik", "Logik"],
+    text: "Du hast Freude an Computern, Technik und logischem Denken."
+  },
+
+  "Interactive Media Designer EFZ": {
+    tags: ["Kreativität", "Computer", "Medien"],
+    text: "Du möchtest digitale Inhalte gestalten und kreativ mit Medien arbeiten."
+  },
+
+  "Polydesignerin 3D EFZ": {
+    tags: ["Kreativität", "Gestaltung", "Räume"],
+    text: "Du liebst Gestaltung, Schaufenster, Räume und kreative Projekte."
+  },
+
+  "Immobilienkauffrau EFZ": {
+    tags: ["Büro", "Menschen", "Immobilien"],
+    text: "Du interessierst dich für Gebäude, Wohnungen, Organisation und Kundenkontakt."
+  },
+
+  "Laborantin EFZ": {
+    tags: ["Wissenschaft", "Genauigkeit", "Technik"],
+    text: "Du arbeitest gerne konzentriert und interessierst dich für Experimente und Wissenschaft."
+  },
+
+  "Automobil-Fachfrau EFZ": {
+    tags: ["Technik", "Autos", "Praktisch"],
+    text: "Du möchtest praktisch arbeiten und interessierst dich für Autos und Technik."
+  },
+
+  "Logistikerin EFZ": {
+    tags: ["Organisation", "Praktisch", "Planen"],
+    text: "Du organisierst gerne Waren und möchtest nicht den ganzen Tag am Schreibtisch sitzen."
+  },
+
+  "Floristin EFZ": {
+    tags: ["Kreativität", "Natur", "Gestaltung"],
+    text: "Du bist kreativ und arbeitest gerne mit Blumen, Farben und Natur."
+  },
+
+  "Tierpflegerin EFZ": {
+    tags: ["Tiere", "Natur", "Praktisch"],
+    text: "Du möchtest mit Tieren arbeiten und bist gerne praktisch tätig."
+  },
+
+  "Hotelfachfrau EFZ": {
+    tags: ["Menschen", "Organisation", "Service"],
+    text: "Du hast gerne Kontakt mit Menschen und magst abwechslungsreiche Arbeit."
+  },
+
+  "Detailhandelsfachfrau EFZ": {
+    tags: ["Menschen", "Beratung", "Verkauf"],
+    text: "Du berätst gerne Menschen und interessierst dich für Produkte und Verkauf."
+  }
+
+};
+
+
+const questions = [
+
+  {
+    q: "Was würdest du am liebsten während der Arbeit machen?",
+    a: [
+      ["Menschen beraten", ["Menschen","Beratung"]],
+      ["Am Computer arbeiten", ["Computer","Büro"]],
+      ["Etwas Kreatives gestalten", ["Kreativität","Gestaltung"]],
+      ["Praktisch etwas machen", ["Praktisch","Technik"]]
+    ]
+  },
+
+  {
+    q: "Was gefällt dir in der Schule am meisten?",
+    a: [
+      ["Deutsch / Sprachen", ["Kommunikation","Menschen"]],
+      ["Mathematik", ["Zahlen","Logik"]],
+      ["Bildnerisches Gestalten", ["Kreativität","Gestaltung"]],
+      ["Natur und Technik", ["Wissenschaft","Technik"]]
+    ]
+  },
+
+  {
+    q: "Wie möchtest du später arbeiten?",
+    a: [
+      ["Im Büro", ["Büro","Organisation"]],
+      ["In einer Praxis", ["Gesundheit","Menschen"]],
+      ["In einem kreativen Umfeld", ["Kreativität","Medien"]],
+      ["Draussen oder praktisch", ["Praktisch","Natur"]]
+    ]
+  },
+
+  {
+    q: "Was ist dir bei einer Lehrstelle wichtig?",
+    a: [
+      ["Gute Arbeitszeiten und Ordnung", ["Büro","Organisation"]],
+      ["Menschen helfen", ["Menschen","Gesundheit"]],
+      ["Kreativ sein", ["Kreativität","Gestaltung"]],
+      ["Abwechslungsreiche praktische Arbeit", ["Praktisch","Technik"]]
+    ]
+  },
+
+  {
+    q: "Welche Aufgabe klingt am interessantesten?",
+    a: [
+      ["Eine Kundin beraten", ["Beratung","Menschen"]],
+      ["Eine Website gestalten", ["Computer","Medien"]],
+      ["Einen Raum planen", ["Räume","Gestaltung"]],
+      ["Etwas reparieren", ["Technik","Praktisch"]]
+    ]
+  },
+
+  {
+    q: "Wie genau arbeitest du?",
+    a: [
+      ["Sehr genau", ["Genauigkeit","Wissenschaft"]],
+      ["Organisiert", ["Organisation","Büro"]],
+      ["Spontan und kreativ", ["Kreativität","Gestaltung"]],
+      ["Ich lerne am liebsten durch Ausprobieren", ["Praktisch","Technik"]]
+    ]
+  },
+
+  {
+    q: "Was würdest du lieber machen?",
+    a: [
+      ["Mit Kindern arbeiten", ["Kinder","Soziales"]],
+      ["Mit Tieren arbeiten", ["Tiere","Natur"]],
+      ["Mit Technik arbeiten", ["Technik","Computer"]],
+      ["Mit Kunden arbeiten", ["Kunden","Beratung"]]
+    ]
+  },
+
+  {
+    q: "Welche Umgebung gefällt dir?",
+    a: [
+      ["Modernes Büro", ["Büro","Computer"]],
+      ["Spital / Praxis", ["Gesundheit","Medizin"]],
+      ["Studio / Designbüro", ["Kreativität","Medien"]],
+      ["Werkstatt / Betrieb", ["Praktisch","Technik"]]
+    ]
+  },
+
+  {
+    q: "Wie viel Kontakt mit Menschen möchtest du?",
+    a: [
+      ["Sehr viel", ["Menschen","Beratung"]],
+      ["Regelmässig", ["Kommunikation","Service"]],
+      ["Eher wenig", ["Computer","Wissenschaft"]],
+      ["Kommt darauf an", ["Organisation","Kreativität"]]
+    ]
+  },
+
+  {
+    q: "Was würdest du gerne lernen?",
+    a: [
+      ["Wie Unternehmen funktionieren", ["Büro","Organisation"]],
+      ["Wie der menschliche Körper funktioniert", ["Medizin","Gesundheit"]],
+      ["Wie man digitale Inhalte erstellt", ["Medien","Computer"]],
+      ["Wie Dinge technisch funktionieren", ["Technik","Logik"]]
+    ]
+  },
+
+  {
+    q: "Was passt am besten zu dir?",
+    a: [
+      ["Ich kann gut organisieren", ["Organisation","Büro"]],
+      ["Ich kann gut zuhören", ["Menschen","Soziales"]],
+      ["Ich habe viele kreative Ideen", ["Kreativität","Gestaltung"]],
+      ["Ich löse gerne Probleme", ["Logik","Technik"]]
+    ]
+  },
+
+  {
+    q: "Was wäre für dich ein cooler Arbeitstag?",
+    a: [
+      ["Termine planen und E-Mails schreiben", ["Büro","Organisation"]],
+      ["Menschen betreuen", ["Menschen","Gesundheit"]],
+      ["Ein Projekt gestalten", ["Kreativität","Medien"]],
+      ["Etwas bauen, testen oder reparieren", ["Technik","Praktisch"]]
+    ]
+  },
+
+  {
+    q: "Welche Aufgabe würdest du freiwillig übernehmen?",
+    a: [
+      ["Eine Präsentation machen", ["Kommunikation","Menschen"]],
+      ["Eine Tabelle erstellen", ["Zahlen","Büro"]],
+      ["Ein Plakat gestalten", ["Kreativität","Gestaltung"]],
+      ["Etwas technisch ausprobieren", ["Technik","Praktisch"]]
+    ]
+  },
+
+  {
+    q: "Welche Themen findest du spannend?",
+    a: [
+      ["Geld und Wirtschaft", ["Zahlen","Büro"]],
+      ["Gesundheit und Medizin", ["Gesundheit","Medizin"]],
+      ["Design und Social Media", ["Kreativität","Medien"]],
+      ["Technik und Natur", ["Technik","Wissenschaft"]]
+    ]
+  },
+
+  {
+    q: "Wo könntest du dir eine Schnupperlehre vorstellen?",
+    a: [
+      ["Bank / Versicherung / Firma", ["Büro","Zahlen"]],
+      ["Spital / Arzt / Zahnarzt", ["Gesundheit","Medizin"]],
+      ["Agentur / Design / Medien", ["Kreativität","Medien"]],
+      ["Werkstatt / Labor / Betrieb", ["Technik","Wissenschaft"]]
+    ]
+  },
+
+  {
+    q: "Wie soll dein Beruf sein?",
+    a: [
+      ["Sicher und gut organisiert", ["Organisation","Büro"]],
+      ["Sinnvoll und hilfreich", ["Menschen","Gesundheit"]],
+      ["Kreativ und abwechslungsreich", ["Kreativität","Medien"]],
+      ["Praktisch und aktiv", ["Praktisch","Technik"]]
+    ]
+  },
+
+  {
+    q: "Was würdest du lieber verkaufen oder präsentieren?",
+    a: [
+      ["Finanzielle Produkte", ["Zahlen","Beratung"]],
+      ["Gesundheitsprodukte", ["Gesundheit","Menschen"]],
+      ["Design / Medien", ["Kreativität","Medien"]],
+      ["Technische Produkte", ["Technik","Praktisch"]]
+    ]
+  },
+
+  {
+    q: "Welche Stärke hast du eher?",
+    a: [
+      ["Kommunikation", ["Kommunikation","Menschen"]],
+      ["Genauigkeit", ["Genauigkeit","Wissenschaft"]],
+      ["Kreativität", ["Kreativität","Gestaltung"]],
+      ["Logisches Denken", ["Logik","Technik"]]
+    ]
+  },
+
+  {
+    q: "Was möchtest du auf keinen Fall?",
+    a: [
+      ["Den ganzen Tag alleine sein", ["Menschen","Beratung"]],
+      ["Den ganzen Tag am Computer sein", ["Praktisch","Menschen"]],
+      ["Den ganzen Tag dasselbe machen", ["Abwechslungsreich","Service"]],
+      ["Den ganzen Tag körperlich arbeiten", ["Büro","Computer"]]
+    ]
+  },
+
+  {
+    q: "Welche Aussage passt am besten?",
+    a: [
+      ["Ich sehe mich in einem Büro", ["Büro","Organisation"]],
+      ["Ich sehe mich im Gesundheitsbereich", ["Gesundheit","Menschen"]],
+      ["Ich sehe mich in einem kreativen Beruf", ["Kreativität","Medien"]],
+      ["Ich sehe mich in einem technischen/praktischen Beruf", ["Technik","Praktisch"]]
+    ]
+  }
+
+];
+
+
+let currentQuestion = 0;
+let scores = {};
+let selected = false;
+
+
+function startQuiz() {
+
+  document.getElementById("start").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+
+  currentQuestion = 0;
+  scores = {};
+
+  for (let job in jobs) {
+    scores[job] = 0;
+  }
+
+  showQuestion();
+}
+
+
+function showQuestion() {
+
+  selected = false;
+
+  const question = questions[currentQuestion];
+
+  document.getElementById("questionNumber").innerText =
+    "Frage " + (currentQuestion + 1) + " von " + questions.length;
+
+  document.getElementById("question").innerText = question.q;
+
+  document.getElementById("progressBar").style.width =
+    ((currentQuestion) / questions.length * 100) + "%";
+
+  const answers = document.getElementById("answers");
+
+  answers.innerHTML = "";
+
+  question.a.forEach((answer, index) => {
+
+    const button = document.createElement("button");
+
+    button.className = "answer";
+
+    button.innerText = answer[0];
+
+    button.onclick = function() {
+      chooseAnswer(index, button);
+    };
+
+    answers.appendChild(button);
+
+  });
+
+  document.getElementById("nextButton").style.display = "none";
+}
+
+
+function chooseAnswer(index, button) {
+
+  if (selected) return;
+
+  selected = true;
+
+  document.querySelectorAll(".answer").forEach(btn => {
+    btn.classList.remove("selected");
+  });
+
+  button.classList.add("selected");
+
+  const tags = questions[currentQuestion].a[index][1];
+
+  tags.forEach(tag => {
+
+    for (let job in jobs) {
+
+      if (jobs[job].tags.includes(tag)) {
+        scores[job] += 1;
+      }
+
+    }
+
+  });
+
+  document.getElementById("nextButton").style.display = "block";
+}
+
+
+function nextQuestion() {
+
+  if (!selected) return;
+
+  currentQuestion++;
+
+  if (currentQuestion >= questions.length) {
+    showResults();
+  } else {
+    showQuestion();
+  }
+
+}
+
+
+function showResults() {
+
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("result").style.display = "block";
+
+  document.getElementById("progressBar").style.width = "100%";
+
+  let sorted = Object.entries(scores)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,5);
+
+  let maxScore = sorted[0][1];
+
+  if (maxScore === 0) maxScore = 1;
+
+  let html = "";
+
+  sorted.forEach((item, index) => {
+
+    let job = item[0];
+    let score = item[1];
+
+    let percentage = Math.round((score / maxScore) * 100);
+
+    html += `
+      <div class="job">
+
+        <div class="jobTop">
+          <span>${index + 1}. ${job}</span>
+          <span>${percentage}%</span>
+        </div>
+
+        <div class="bar">
+          <div class="barFill" style="width:${percentage}%"></div>
+        </div>
+
+        <p style="font-size:14px;color:#666;">
+          ${jobs[job].text}
+        </p>
+
+      </div>
+    `;
+
+  });
+
+  document.getElementById("results").innerHTML = html;
+
+
+  // Interessen bestimmen
+
+  let tagScores = {};
+
+  Object.keys(jobs).forEach(job => {
+
+    jobs[job].tags.forEach(tag => {
+
+      tagScores[tag] = (tagScores[tag] || 0) + scores[job];
+
+    });
+
+  });
+
+  let topTags = Object.entries(tagScores)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0,6);
+
+  let tagHTML = "";
+
+  topTags.forEach(tag => {
+
+    tagHTML += `
+      <span class="tag">
+        ${tag[0]}
+      </span>
+    `;
+
+  });
+
+  document.getElementById("interests").innerHTML = tagHTML;
+
+}
+
+
+async function saveAsImage() {
+
+  const card = document.getElementById("resultCard");
+
+  const button = document.querySelector(".downloadButton");
+
+  button.innerText = "Bild wird erstellt...";
+
+  try {
+
+    const canvas = await html2canvas(card, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true
+    });
+
+    canvas.toBlob(async function(blob) {
+
+      const file = new File(
+        [blob],
+        "mein-traum-lehrstellen-ergebnis.png",
+        {type: "image/png"}
+      );
+
+      // Auf iPhone/iPad: Teilen/Speichern
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({files: [file]})
+      ) {
+
+        await navigator.share({
+          files: [file],
+          title: "Mein Traum-Lehrstellen-Ergebnis"
+        });
+
+      } else {
+
+        // Alternative für Browser
+        const url = URL.createObjectURL(blob);
+
+        const newWindow = window.open();
+
+        if (newWindow) {
+
+          newWindow.document.write(`
+            <html>
+            <head>
+              <title>Mein Ergebnis</title>
+            </head>
+
+            <body style="
+              margin:0;
+              background:#eee;
+              display:flex;
+              justify-content:center;
+              align-items:center;
+              min-height:100vh;
+            ">
+
+              <img
+                src="${url}"
+                style="max-width:95%;height:auto;"
+              >
+
+            </body>
+            </html>
+          `);
+
+        } else {
+
+          alert(
+            "Das Bild konnte nicht automatisch geöffnet werden. " +
+            "Halte das Ergebnis gedrückt und speichere es als Bild."
+          );
+
+        }
+
+      }
+
+      button.innerText = "Ergebnis als Bild speichern";
+
+    }, "image/png");
+
+  } catch(error) {
+
+    console.error(error);
+
+    button.innerText = "Ergebnis als Bild speichern";
+
+    alert(
+      "Das Bild konnte leider nicht erstellt werden. " +
+      "Bitte versuche es nochmals."
+    );
+
+  }
+
+}
+
+
+function restartQuiz() {
+
+  document.getElementById("result").style.display = "none";
+  document.getElementById("start").style.display = "block";
+
+}
+
+</script>
+
+</body>
+</html>
